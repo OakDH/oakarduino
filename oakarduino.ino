@@ -20,10 +20,10 @@ measurements measure_sensors();
 
 void setup() 
 {
-		Wire.begin();
-		Serial.begin(9600);
+	Wire.begin();
+	Serial.begin(9600);
 
-		while(!Serial) delay(20);
+	while(!Serial) delay(20);
 }
 
 void loop() 
@@ -61,10 +61,7 @@ transmit:
 
 	float soil_sensor = static_cast<float>(analogRead(SOIL_SENS_PIN));
 
-	to_return.soil_moiture = 1 - (soil_sensor - SOIL_SENS_WATER_VALUE) / (SOIL_SENS_DRY_VALUE - SOIL_SENS_WATER_VALUE));
+	to_return.soil_moisture = 1 - (soil_sensor - SOIL_SENS_WATER_VALUE) / (SOIL_SENS_DRY_VALUE - SOIL_SENS_WATER_VALUE);
 
 	return to_return;
 }
-
-		
-
