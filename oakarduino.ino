@@ -1,5 +1,7 @@
 #include "Wire.h"
 
+#define POLL_RATE 3000
+
 #define SOIL_SENS_PIN A0
 #define SENS_ADDR 0x5c
 
@@ -12,11 +14,15 @@ struct measurements
 	float temperature;
 	float humidity;
 	float soil_moisture;
+	int id;
 };
 
 // WARNING: Don't call function more than once per two seconds due to the warming up period
 // of the humidity and temperature sensor.
 measurements measure_sensors();
+
+void send_packet(measurements m);
+void on_packet_receive();
 
 void setup() 
 {
@@ -28,7 +34,21 @@ void setup()
 
 void loop() 
 {
-	
+	delay(POLL_RATE);
+
+	// Handle incoming packets
+	int packet_count = Serial.available() / sizeof(measurements);
+
+	for (int i = 0; i < packet_count; i++)
+	{
+		on_packet_receive();
+	}
+	delay(100);
+	// Measure and send
+	measurements m = measure_sensors();
+	m.id = 0;
+
+	send_packet(m);
 }
 
 measurements measure_sensors()
@@ -64,4 +84,22 @@ transmit:
 	to_return.soil_moisture = 1 - (soil_sensor - SOIL_SENS_WATER_VALUE) / (SOIL_SENS_DRY_VALUE - SOIL_SENS_WATER_VALUE);
 
 	return to_return;
+}
+
+inline void send_packet(measurements m)
+{
+	Serial.write((char*)&m, sizeof(measurements));
+}
+
+void on_packet_receive()
+{
+	char buff[sizeof(measurements)];
+	
+	Serial.readBytes(buff, sizeof(measurements));
+	
+	measurements* m = (measurements*) &buff;
+	
+	m->id++;
+
+	send_packet(*m);
 }
